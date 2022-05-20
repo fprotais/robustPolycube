@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
     Trace::drop_cells_scalar(hexmesh.m, hexmesh.original_bloc, "pillowed", -2);
 
     smooth(hexmesh.m, surf, 1);
-    Trace::drop_cells_scalar(hexmesh.m, hexmesh.original_bloc, "smoothed", 1);
+    Trace::drop_cells_scalar(hexmesh.m, hexmesh.original_bloc, "smoothed", -2);
 
 
     // SAVING
