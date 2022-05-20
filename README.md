@@ -2,7 +2,7 @@
 
 ![](figures/rb_teaser.jpg)
 
-[François Protais](fprotais.github.io), [Maxence Reberol](https://mxncr.github.io/), Nicolas Ray, [Etienne Corman](https://members.loria.fr/ECorman/), Franck Ledoux and [Dmitry Sokolov](https://members.loria.fr/DSokolov/)
+[François Protais](https://fprotais.github.io), [Maxence Reberol](https://mxncr.github.io/), Nicolas Ray, [Etienne Corman](https://members.loria.fr/ECorman/), Franck Ledoux and [Dmitry Sokolov](https://members.loria.fr/DSokolov/)
 
 # TODO
 - Complete this README: detail every binary with inputs and outputs. 
