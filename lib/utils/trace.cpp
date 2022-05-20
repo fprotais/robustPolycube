@@ -54,7 +54,7 @@ inline double det(vec2 a, vec2 b) { return a.x * b.y - b.x * a.y; }
 inline double vector_angle(vec3 v0, vec3 v1) { return atan2(cross(v0, v1).norm(), v0 * v1); }
 inline double corner_angle(const SurfaceConnectivity& fec, int c) { return vector_angle(fec.geom(c), -fec.geom(fec.prev(c))); }
 
-inline double ave_edge_size(const Surface& m) {
+double ave_edge_size(const Surface& m) {
 	SurfaceConnectivity fec(m);
 	double res = 0;
 	FOR(c, m.ncorners())  res += fec.geom(c).norm();
@@ -65,22 +65,22 @@ inline double ave_edge_size(const Surface& m) {
 
 #ifdef WIN32
 #include <windows.h>
-void color(int t, int f){
+void color(int t, int f) {
 	HANDLE H = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(H, f * 16 + t);
 }
 #else
 void color(int t, int f) {
-	if(t == 15 && f == 0) {
+	if (t == 15 && f == 0) {
 		std::cerr << "\e[0m";
 		return;
 	}
 	std::cerr << "\e[0";
-	if(t&8) std::cerr << ";1";
-	t = ((t&1)<<2) | (t&2) | ((t>>2)&1);
-	std::cerr << ";3" << char('0'+char(t));
-	f = ((f&1)<<2) | (f&2) | ((f>>2)&1);
-	if(f != 0) std::cerr << ";4" << char('0'+char(f));
+	if (t & 8) std::cerr << ";1";
+	t = ((t & 1) << 2) | (t & 2) | ((t >> 2) & 1);
+	std::cerr << ";3" << char('0' + char(t));
+	f = ((f & 1) << 2) | (f & 2) | ((f >> 2) & 1);
+	if (f != 0) std::cerr << ";4" << char('0' + char(f));
 	std::cerr << 'm';
 }
 #endif
@@ -96,7 +96,7 @@ namespace Trace {
 	static std::string graphite_path;
 
 
-	struct  LogTime{
+	struct  LogTime {
 		/**
 		 * CheckPoint is the list item of LogTime
 		 * "up" is it's father
@@ -115,159 +115,160 @@ namespace Trace {
 		static std::vector<std::pair<std::string, std::string> > out_strings;
 
 
-		static bool is_start_section(unsigned int i){
-		return check[i].right != i + 1;
-	}
+		static bool is_start_section(unsigned int i) {
+			return check[i].right != i + 1;
+		}
 
-		static bool is_end_section(unsigned int i){
-		return check[i].n == "end section";
-	}
-		static bool is_final(unsigned int i){
-		return i + 1 == check.size();
-	}
+		static bool is_end_section(unsigned int i) {
+			return check[i].n == "end section";
+		}
+		static bool is_final(unsigned int i) {
+			return i + 1 == check.size();
+		}
 
-		static double time(unsigned int i){
-		return (double(check[check[i].right].t) - double(check[i].t)) / double(CLOCKS_PER_SEC);
-	}
+		static double time(unsigned int i) {
+			return (double(check[check[i].right].t) - double(check[i].t)) / double(CLOCKS_PER_SEC);
+		}
 
 		static unsigned int dec(unsigned int i = (unsigned int)(-1)) {
-		if (i == (unsigned int)(-1))
-			i = (unsigned int)(check.size() - 1);
-		unsigned int res = 0;
-		i = check[i].up;
-		while (i != (unsigned int)(-1)) {
-			res++;
+			if (i == (unsigned int)(-1))
+				i = (unsigned int)(check.size() - 1);
+			unsigned int res = 0;
 			i = check[i].up;
+			while (i != (unsigned int)(-1)) {
+				res++;
+				i = check[i].up;
+			}
+			return res;
 		}
-		return res;
-	}
 
 		static unsigned int lastdec() {
-		if (!check.empty())
-			return dec((unsigned int)(check.size() - 1));
-		return 0;
-	}
+			if (!check.empty())
+				return dec((unsigned int)(check.size() - 1));
+			return 0;
+		}
 
 		static void debug() {
-		std::cerr << std::endl;
-		std::cerr << "--------------BEGIN DEBUG-------------------" << std::endl;
-		for (size_t i = 0; i < check.size(); i++) {
-			std::cerr << std::string((unsigned int)(4 * dec((unsigned int)(i))), ' ') << i << "  r = " << check[i].right << " u = " << check[i].up
-				<< "\tstart" << check[i].t << "\tname" << check[i].n << std::endl;
+			std::cerr << std::endl;
+			std::cerr << "--------------BEGIN DEBUG-------------------" << std::endl;
+			for (size_t i = 0; i < check.size(); i++) {
+				std::cerr << std::string((unsigned int)(4 * dec((unsigned int)(i))), ' ') << i << "  r = " << check[i].right << " u = " << check[i].up
+					<< "\tstart" << check[i].t << "\tname" << check[i].n << std::endl;
+			}
+			std::cerr << std::endl;
+			std::cerr << "-------------- END  DEBUG-------------------" << std::endl;
 		}
-		std::cerr << std::endl;
-		std::cerr << "-------------- END  DEBUG-------------------" << std::endl;
-	}
 
 		static std::string cur_stack() {
-		std::string res;
-		std::vector<unsigned int> stack;
-		{
-			unsigned int i = (unsigned int)(check.size() - 1);
-			while (i != (unsigned int)(-1)) { stack.push_back(i); i = check[i].up; }
-		}
-		for (int i = int(stack.size()) - 1; i >= 0; i--) {
-			res.append(check[stack[size_t(i)]].n);
-			if (i > 0) res.append(" ==> ");
-		}
-		return res;
-	}
-
-	static void report(std::ostream& out, unsigned int timing_depth=10000) {
-		if (check.empty()) return;
-		if (check.back().n != "the end") { add_step("the end"); }
-
-		if (timing_depth != (unsigned int)(-1)) {
-			out << "\n***********************************************************" << std::endl;
-			out << "                  TIMING SUMMARY " << std::endl;
-			for (unsigned int i = 0; i < check.size() - 1; i++) {
-				if (dec(i) > timing_depth) continue;
-				if (is_start_section(i))
-					out << std::string(4U * dec(i), ' ') << time(i) << "\t====>  " << check[i].n << std::endl;
-				else if (!is_end_section(i) && check[i].n != "begin section")
-					out << std::string(4U * dec(i), ' ') << time(i) << "\t" << check[i].n << std::endl;
-			}				
-
-			out << double(check[check.size() - 1U].t - check[0].t) / double(CLOCKS_PER_SEC) << "\tTOTAL" << std::endl;
-		}
-		out << "\n***********************************************************" << std::endl;
-		out << "                  OUPUT VALUES" << std::endl;
-		for (auto const& v : out_values)
-			out << v.second << " \t" << v.first << std::endl;
-	}
-
-
-
-	static void report_py(std::ostream& out, unsigned int timing_depth) {
-		if (!check.empty()&& check.back().n != "the end") { add_step("the end"); }
-
-			
-			out << "{\"finished\": \"yes\"";
-		if (timing_depth != (unsigned int)(-1)) {
-			for (unsigned int i = 0; i < check.size() - 1; i++) {
-				if (dec(i) > timing_depth) continue;
-				if (is_start_section(i)) out << ",\"TIME_" << check[i].n << "\" :  " << time(i);
-				else if (!is_end_section(i) && check[i].n != "begin section")
-					out << ",\"TIME_" << check[i].n << "\":  " << time(i);
+			std::string res;
+			std::vector<unsigned int> stack;
+			{
+				unsigned int i = (unsigned int)(check.size() - 1);
+				while (i != (unsigned int)(-1)) { stack.push_back(i); i = check[i].up; }
 			}
+			for (int i = int(stack.size()) - 1; i >= 0; i--) {
+				res.append(check[stack[size_t(i)]].n);
+				if (i > 0) res.append(" ==> ");
+			}
+			return res;
 		}
-		for (auto const& v : out_values)
-			out << ", \"" << v.first << "\": " << v.second;
-		for (auto const& v : out_strings)
-			out << ",\"" << v.first << "\": \"" << v.second << "\"";
-		out << "}" ;
 
-	}
+		static void report(std::ostream& out, unsigned int timing_depth = 10000) {
+			if (check.empty()) return;
+			if (check.back().n != "the end") { add_step("the end"); }
+
+			if (timing_depth != (unsigned int)(-1)) {
+				out << "\n***********************************************************" << std::endl;
+				out << "                  TIMING SUMMARY " << std::endl;
+				for (unsigned int i = 0; i < check.size() - 1; i++) {
+					if (dec(i) > timing_depth) continue;
+					if (is_start_section(i))
+						out << std::string(4U * dec(i), ' ') << time(i) << "\t====>  " << check[i].n << std::endl;
+					else if (!is_end_section(i) && check[i].n != "begin section")
+						out << std::string(4U * dec(i), ' ') << time(i) << "\t" << check[i].n << std::endl;
+				}
+
+				out << double(check[check.size() - 1U].t - check[0].t) / double(CLOCKS_PER_SEC) << "\tTOTAL" << std::endl;
+			}
+			out << "\n***********************************************************" << std::endl;
+			out << "                  OUPUT VALUES" << std::endl;
+			for (auto const& v : out_values)
+				out << v.second << " \t" << v.first << std::endl;
+		}
+
+
+
+		static void report_py(std::ostream& out, unsigned int timing_depth) {
+			if (!check.empty() && check.back().n != "the end") { add_step("the end"); }
+
+
+			out << "{\"finished\": \"yes\"";
+			if (timing_depth != (unsigned int)(-1)) {
+				for (unsigned int i = 0; i < check.size() - 1; i++) {
+					if (dec(i) > timing_depth) continue;
+					if (is_start_section(i)) out << ",\"TIME_" << check[i].n << "\" :  " << time(i);
+					else if (!is_end_section(i) && check[i].n != "begin section")
+						out << ",\"TIME_" << check[i].n << "\":  " << time(i);
+				}
+			}
+			for (auto const& v : out_values)
+				out << ", \"" << v.first << "\": " << v.second;
+			for (auto const& v : out_strings)
+				out << ",\"" << v.first << "\": \"" << v.second << "\"";
+			out << "}";
+
+		}
 
 
 
 
 
-	// construct API
+		// construct API
 		static void log_value(std::string const& str, double val) {
-		std::cerr << "LogTime >> " << str << " = " << val << std::endl;
-		out_values.push_back(std::pair<std::string, double>(str, val));
-	}
+			std::cerr << "LogTime >> " << str << " = " << val << std::endl;
+			out_values.push_back(std::pair<std::string, double>(str, val));
+		}
 		static void log_string(std::string const& str, std::string const& val) {
-		std::cerr << "LogTime >> " << str << " = " << val << std::endl;
-		out_strings.push_back(std::pair<std::string, std::string>(str, val));
-	}
+			std::cerr << "LogTime >> " << str << " = " << val << std::endl;
+			out_strings.push_back(std::pair<std::string, std::string>(str, val));
+		}
 
 		static void add_step(std::string const& name) {
-		if (check.empty()) {
-			CheckPoint c(name, (unsigned int)(-1));
-			check.push_back(c);
-		} else {
-			CheckPoint c(name, check.back().up);
-			check.back().right = (unsigned int)(check.size());
+			if (check.empty()) {
+				CheckPoint c(name, (unsigned int)(-1));
+				check.push_back(c);
+			}
+			else {
+				CheckPoint c(name, check.back().up);
+				check.back().right = (unsigned int)(check.size());
+				check.push_back(c);
+			}
+			const char* symbol = "#>=_-~..............";
+			std::cerr << std::endl << std::string(4 * lastdec(), ' ') << std::string(80 - 4 * lastdec(), symbol[dec()]) << std::endl;
+			std::cerr << std::string(4 * lastdec() + 4, ' ') << cur_stack() << std::endl << std::endl;
+		}
+
+		static void start_section(std::string const& secname, std::string const& name = "begin section") {
+			add_step(secname);
+			CheckPoint c(name, (unsigned int)(check.size()) - 1);
 			check.push_back(c);
 		}
-		const char* symbol = "#>=_-~..............";
-		std::cerr << std::endl << std::string(4 * lastdec(), ' ') << std::string(80 - 4 * lastdec(), symbol[dec()]) << std::endl;
-		std::cerr << std::string(4 * lastdec() + 4, ' ') << cur_stack() << std::endl << std::endl;
-	}
-
-		static void start_section(std::string const& secname, std::string const& name="begin section") {
-		add_step(secname);
-		CheckPoint c(name, (unsigned int)(check.size()) - 1);
-		check.push_back(c);
-	}
 		static void end_section() {
-		unsigned int u = check.back().up;
-		check[u].right = (unsigned int)(check.size());
-		check.back().right = (unsigned int)(check.size());
-		CheckPoint c("end section", check[u].up);
-		check.push_back(c);
-	}
+			unsigned int u = check.back().up;
+			check[u].right = (unsigned int)(check.size());
+			check.back().right = (unsigned int)(check.size());
+			CheckPoint c("end section", check[u].up);
+			check.push_back(c);
+		}
 
-	
+
 		static void drop_file(std::string const& filename, bool append, unsigned int timing_depth) {
-		std::ofstream f;
-		if (append) f.open(filename.c_str(), std::fstream::app);
-		else		f.open(filename.c_str());
-		report(f, timing_depth);
-		f.close();
-	}
+			std::ofstream f;
+			if (append) f.open(filename.c_str(), std::fstream::app);
+			else		f.open(filename.c_str());
+			report(f, timing_depth);
+			f.close();
+		}
 	};
 
 	std::vector<LogTime::CheckPoint> LogTime::check;
@@ -332,7 +333,7 @@ namespace Trace {
 		color(15, 0);
 	}
 	Section::Section(const std::string& str) {
-		trace_was_active = Trace::trace_steps_active; 
+		trace_was_active = Trace::trace_steps_active;
 		if (!trace_was_active) return;
 		set_alert_level(0);
 		LogTime::start_section(str);
@@ -340,16 +341,16 @@ namespace Trace {
 	}
 	Section::~Section() { if (trace_was_active) LogTime::end_section(); }
 
-	void log_value(std::string const& str, double val, int alert_level) { set_alert_level(alert_level); LogTime::log_value(str, val); color(15, 0);}
-	void log_string(std::string const& str, std::string const& val, int alert_level) {set_alert_level(alert_level);LogTime::log_string(str, val);color(15, 0);}
-	void alert(std::string msg) { log_string("ALERT",msg,2); }
+	void log_value(std::string const& str, double val, int alert_level) { set_alert_level(alert_level); LogTime::log_value(str, val); color(15, 0); }
+	void log_string(std::string const& str, std::string const& val, int alert_level) { set_alert_level(alert_level); LogTime::log_string(str, val); color(15, 0); }
+	void alert(std::string msg) { log_string("ALERT", msg, 2); }
 	void show_log() {
 		LogTime::report(std::cerr);
 	}
 	void append_py_log(std::string const& filename) {
 		std::ofstream myfile;
 		//myfile.open(filename, std::ios::out | std::ios::app);
-		myfile.open(filename, std::ios::out );
+		myfile.open(filename, std::ios::out);
 		LogTime::report_py(myfile, -1);
 		myfile.close();
 	}
@@ -362,7 +363,7 @@ namespace Trace {
 		std::string point_attr
 	) {
 		if (!drop_mesh_is_active) return;
-		std::string filename = outputprefix + name + "_" +std::to_string(num_drop++) + ".geogram";
+		std::string filename = outputprefix + name + "_" + std::to_string(num_drop++) + ".geogram";
 		write_by_extension(filename, m, attr);
 		std::ofstream myfile;
 		myfile.open(outputdir + "view.lua", std::ios::out | std::ios::app);
@@ -388,7 +389,7 @@ namespace Trace {
 		std::string point_attr,
 		std::string facet_attr,
 		std::string corner_attr
-		) {
+	) {
 		if (!drop_mesh_is_active) return;
 		std::string filename = outputprefix + name + "_" + std::to_string(num_drop++) + ".geogram";
 		write_by_extension(filename, m, attr);
@@ -409,7 +410,7 @@ namespace Trace {
 		}
 		else if (!point_attr.empty()) {
 			myfile << "scene_graph.current().shader.painting = 'ATTRIBUTE'\n";
-			myfile << "scene_graph.current().shader.attribute = 'vertices."<< point_attr <<"'\n";
+			myfile << "scene_graph.current().shader.attribute = 'vertices." << point_attr << "'\n";
 			myfile << "scene_graph.current().shader.autorange()\n";
 			myfile << "scene_graph.current().shader.vertices_style = 'true; 0 0 0 1; 3'\n";
 		}
@@ -439,10 +440,10 @@ namespace Trace {
 		const std::string& name,
 		std::vector<NamedContainer> vertex_attributes,
 		std::vector<NamedContainer> segment_attributes,
-		bool show_edge_attr ) {
+		bool show_edge_attr) {
 		if (!drop_mesh_is_active) return;
 		std::string filename = outputprefix + name + "_" + std::to_string(num_drop++) + ".geogram";
-		write_by_extension(filename, m, PolyLineAttributes{ vertex_attributes, segment_attributes});
+		write_by_extension(filename, m, PolyLineAttributes{ vertex_attributes, segment_attributes });
 		std::ofstream myfile;
 		myfile.open(outputdir + "view.lua", std::ios::out | std::ios::app);
 		myfile << "scene_graph.load_object(\"" << filename << "\")\n";
@@ -455,9 +456,9 @@ namespace Trace {
 	}
 
 
-	void drop_facet_vec3(const Surface& m, FacetAttribute<vec3>& facet_attr, std::string name , ArrowStyle as ,bool proportional_to_ave_edge_size, bool normalize) {
+	void drop_facet_vec3(const Surface& m, FacetAttribute<vec3>& facet_attr, std::string name, ArrowStyle as, bool proportional_to_ave_edge_size, bool normalize) {
 		double scale = 1;
-		if(proportional_to_ave_edge_size) scale =   ave_edge_size(m);
+		if (proportional_to_ave_edge_size) scale = ave_edge_size(m);
 		if (as.resolution == 0) {
 			PolyLine outm;
 
@@ -468,7 +469,7 @@ namespace Trace {
 				vec3 decal = facet_attr[f];
 				if (normalize) decal.normalize();
 				decal = scale * decal;
-				outm.points[offv + 1] = G+decal ;
+				outm.points[offv + 1] = G + decal;
 				int offs = outm.create_segments(1);
 				FOR(i, 2) outm.segments[2 * offs + i] = offv + i;
 			}
@@ -483,12 +484,12 @@ namespace Trace {
 				vec3 decal = facet_attr[f];
 				if (normalize) decal.normalize();
 				decal = scale * decal;
-				add_arrow(outm, attr, facet_attr[f].norm(),G,G + decal, as);
+				add_arrow(outm, attr, facet_attr[f].norm(), G, G + decal, as);
 			}
 			drop_surface(outm, name, SurfaceAttributes{ {}, { { "attr", attr.ptr } }, {} }, "", "attr");
 		}
 	}
-	void drop_surface_points_vec3(const Surface& m, PointAttribute<vec3>& attr, std::string name , ArrowStyle as , bool proportional_to_ave_edge_size , bool normalize ) {
+	void drop_surface_points_vec3(const Surface& m, PointAttribute<vec3>& attr, std::string name, ArrowStyle as, bool proportional_to_ave_edge_size, bool normalize) {
 		double scale = 1;
 		if (proportional_to_ave_edge_size) scale = ave_edge_size(m);
 		if (as.resolution == 0) {
@@ -518,7 +519,7 @@ namespace Trace {
 				decal = scale * decal;
 				add_arrow(outm, attrf, attr[v].norm(), G, G + decal, as);
 			}
-			
+
 			drop_surface(outm, name, SurfaceAttributes{ {}, { { "attrf", attrf.ptr } }, {} }, "", "attr");
 		}
 	}

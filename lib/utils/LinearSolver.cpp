@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 #include <filesystem>
 //geogram dependancy
@@ -90,10 +91,10 @@ inline static bool is_BIN(const double value) {
 
 inline std::ostream& operator<<(std::ostream& os, const LinearSolver::_constraint& cons)
 {
-	for(size_t v = 0; v< cons._ids.size(); ++v){
+	for (size_t v = 0; v < cons._ids.size(); ++v) {
 		if (cons._weights[v] <= 0)
 			os << " - " << std::abs(cons._weights[v]);
-		else 
+		else
 			os << " + " << cons._weights[v];
 		if (cons._types[v] == LinearSolver::FLOAT_VARIABLE)
 			os << " F_" << cons._ids[v];
@@ -107,8 +108,8 @@ inline std::ostream& operator<<(std::ostream& os, const LinearSolver::_constrain
 	if (cons._type == LinearSolver::INEQUALITY_INF)
 		os << " <= ";
 	else if (cons._type == LinearSolver::INEQUALITY_SUP)
-		os << " >= ";		
-	else 
+		os << " >= ";
+	else
 		os << " = ";
 	os << cons._left_term;
 	return os;
@@ -127,11 +128,11 @@ LinearSolver::LinearSolver(const optimisation_types& optimisation_type, const si
 }
 
 void LinearSolver::get_actual_solver() {
-	std::string file_name =  "tmpfile.txt";
+	std::string file_name = "tmpfile.txt";
 #ifdef WIN32
-	std::string redirect_tmp_file = " > " +   file_name + " 2>&1";
+	std::string redirect_tmp_file = " > " + file_name + " 2>&1";
 #else
-	std::string redirect_tmp_file = ">  " +  file_name;
+	std::string redirect_tmp_file = ">  " + file_name;
 #endif // win32
 
 
@@ -149,7 +150,7 @@ void LinearSolver::get_actual_solver() {
 	}
 	{
 		if (!std::system(std::string(cplex_binary_path + " -c \"help\" " + redirect_tmp_file).c_str())) {
-			TALK("--found cplex : "<< cplex_binary_path);
+			TALK("--found cplex : " << cplex_binary_path);
 			_runned_solver = 2;
 		}
 		std::filesystem::remove("cplex.log");
@@ -167,10 +168,10 @@ void LinearSolver::get_actual_solver() {
 	switch (_runned_solver)
 	{
 	case 1:
-		TALK( " ======= Using LP_SOLVE  ======= \n path is : " + lp_solve_binary_path);
+		TALK(" ======= Using LP_SOLVE  ======= \n path is : " + lp_solve_binary_path);
 		break;
 	case 2:
-		TALK( "======= Using CPLEX  =======  \n path is : " + cplex_binary_path);
+		TALK("======= Using CPLEX  =======  \n path is : " + cplex_binary_path);
 		break;
 	case 3:
 		TALK("======= Using GLPK - GLPSOL  ======= \n path is : " + glpk_binary_path);
@@ -231,29 +232,29 @@ size_t LinearSolver::add_variables(const std::vector<double>& energy_costs, cons
 
 
 
-void LinearSolver::fix_variable(const size_t variable_id, const double value ) {
-	if (variable_id > nb_variables()) 
+void LinearSolver::fix_variable(const size_t variable_id, const double value) {
+	if (variable_id > nb_variables())
 		UNWANTED_BEHAVIOR("out of bound of variable  : " << variable_id << " > " << nb_variables() - 1);
 	_is_solved = false;
 	if (_variables_type[variable_id] != FLOAT_VARIABLE && value < 0)
 		UNWANTED_BEHAVIOR("You tried to fixed the variable " << variable_id << " which is BIN/unsigned int to a signed value\n This is unsolvable, aborting. ")
 
-	if (_variables_is_fixed[variable_id] && value != _variables_value[variable_id]) 
-		UNWANTED_BEHAVIOR("You tried to fixed the variable " << variable_id << " twice to different value \n This is not possible in Linear Programming, aborting. ")
-	else {
-		_variables_is_fixed[variable_id] = true;
+		if (_variables_is_fixed[variable_id] && value != _variables_value[variable_id])
+			UNWANTED_BEHAVIOR("You tried to fixed the variable " << variable_id << " twice to different value \n This is not possible in Linear Programming, aborting. ")
+		else {
+			_variables_is_fixed[variable_id] = true;
 
-		if (_variables_type[variable_id] == UINT_VARIABLE && !is_uint(value)) {
-			TALK("You initialised a unsigned int variable to a float value, rounding ...");
-			_variables_value[variable_id] = std::round(value);
+			if (_variables_type[variable_id] == UINT_VARIABLE && !is_uint(value)) {
+				TALK("You initialised a unsigned int variable to a float value, rounding ...");
+				_variables_value[variable_id] = std::round(value);
+			}
+			else if (_variables_type[variable_id] == BIN_VARIABLE && !is_BIN(value)) {
+				TALK("You initialised a BIN variable to a float value, rounding ...");
+				_variables_value[variable_id] = (double)(bool)std::round(value);
+			}
+			else
+				_variables_value[variable_id] = value;
 		}
-		else if (_variables_type[variable_id] == BIN_VARIABLE && !is_BIN(value)) {
-			TALK("You initialised a BIN variable to a float value, rounding ...");
-			_variables_value[variable_id] = (double)(bool)std::round(value);
-		}
-		else 
-			_variables_value[variable_id] = value;
-	}
 
 }
 void LinearSolver::add_variable_bound(const size_t variable_id, const double lower_bound, const double upper_bound) {
@@ -263,12 +264,12 @@ void LinearSolver::add_variable_bound(const size_t variable_id, const double low
 		_variables_bounds_index[variable_id] = _variables_bounds.size();
 		_variables_bounds.push_back({ lower_bound, upper_bound });
 	}
-	else 
+	else
 		_variables_bounds[_variables_bounds_index[variable_id]] = { lower_bound, upper_bound };
 
 }
 
-void LinearSolver::begin_constraint(const constraint_types constraint_type ) {
+void LinearSolver::begin_constraint(const constraint_types constraint_type) {
 	_is_solved = false;
 	if (_is_in_constraint) UNWANTED_BEHAVIOR("You tried to begin a constraint when in a constraint");
 	_is_in_constraint = true;
@@ -292,14 +293,14 @@ void LinearSolver::end_constraint() {
 
 	// some weak checking for warnings
 	bool all_int = true;
-	for (size_t v = 0; v < _constraints.back()._ids.size(); ++v) 
+	for (size_t v = 0; v < _constraints.back()._ids.size(); ++v)
 		all_int = all_int && (_constraints.back()._types[v] == UINT_VARIABLE || _constraints.back()._types[v] == BIN_VARIABLE);
-	if (all_int && _constraints.back()._type == EQUALITY && !is_int(_constraints.back()._left_term) ) {
+	if (all_int && _constraints.back()._type == EQUALITY && !is_int(_constraints.back()._left_term)) {
 		bool all_weight_int = true;
-		for (size_t v = 0; v < _constraints.back()._weights.size(); ++v) 
+		for (size_t v = 0; v < _constraints.back()._weights.size(); ++v)
 			all_weight_int = all_weight_int && is_uint(_constraints.back()._weights[v]);
 		if (!all_weight_int || (all_weight_int && is_uint(_constraints.back()._left_term)))
-			TALK("The constraint looks ill posed, be careful with integers and equalities : \n "<< _constraints.back()) << std::endl;
+			TALK("The constraint looks ill posed, be careful with integers and equalities : \n " << _constraints.back()) << std::endl;
 	}
 
 	_is_in_constraint = false;
@@ -328,8 +329,8 @@ const std::string LinearSolver::print_problem() {
 	}
 	problem << " obj : ";
 	std::stringstream size_ensurer;
-	for (size_t v = 0; v < nb_variables(); ++v){
- 		if (_variables_energy[v] < 0)
+	for (size_t v = 0; v < nb_variables(); ++v) {
+		if (_variables_energy[v] < 0)
 			size_ensurer << " - " << std::abs(_variables_energy[v]);
 		else
 			size_ensurer << " + " << _variables_energy[v];
@@ -339,7 +340,7 @@ const std::string LinearSolver::print_problem() {
 			size_ensurer << " UI_" << v;
 		else if (_variables_type[v] == LinearSolver::BIN_VARIABLE)
 			size_ensurer << " B_" << v;
-		else 
+		else
 			UNWANTED_BEHAVIOR("Unknown variable type, this is not supposed to happens, please investigate.");
 		if (sizeOf_sst(size_ensurer) > 5000) {
 			//std::cerr << "Push : " << sizeOf_sst(size_ensurer)  << " -> " << problem.str().size() << std::endl;
@@ -360,9 +361,9 @@ const std::string LinearSolver::print_problem() {
 	for (size_t v = 0; v < nb_variables(); ++v) {
 		if (_variables_is_fixed[v]) {
 			if (_variables_type[v] == LinearSolver::FLOAT_VARIABLE)
-				problem << " F_" << v ;
+				problem << " F_" << v;
 			else if (_variables_type[v] == LinearSolver::UINT_VARIABLE)
-				problem << " UI_" << v ;
+				problem << " UI_" << v;
 			else if (_variables_type[v] == LinearSolver::BIN_VARIABLE)
 				problem << " B_" << v;
 			else
@@ -374,9 +375,9 @@ const std::string LinearSolver::print_problem() {
 	problem << "Bounds " << std::endl;
 	for (size_t v = 0; v < nb_variables(); ++v) if (_variables_bounds_index[v] != NOT_AN_ID) {
 		if (_variables_bounds[_variables_bounds_index[v]][0] == LinearSolver::infinityminus)
-			problem <<" -Inf <= ";
+			problem << " -Inf <= ";
 		else
-			problem  << _variables_bounds[_variables_bounds_index[v]][0] << " <= ";
+			problem << _variables_bounds[_variables_bounds_index[v]][0] << " <= ";
 		if (_variables_type[v] == LinearSolver::FLOAT_VARIABLE)
 			problem << " F_" << v;
 		else if (_variables_type[v] == LinearSolver::UINT_VARIABLE)
@@ -421,13 +422,13 @@ bool LinearSolver::solve() {
 	std::ofstream lp_file(_in_file);
 	lp_file << print_problem();
 	lp_file.close();
-		
+
 	//_out_file = "C:/NICO/prog/hexdom-with-geogram/test/tmp/solved.sol"; _is_solved=true;if(0)
 	if (!run_solver()) {
 		TALK("Problem while solving");
 		return false;
 	}
-		
+
 	if (!read_out_file()) {
 		TALK("Problem while reading result, problem impossible ?");
 		return false;
@@ -444,9 +445,9 @@ const std::string LinearSolver::print_solution() {
 
 	for (size_t v = 0; v < nb_variables(); ++v) {
 		if (_variables_type[v] == LinearSolver::FLOAT_VARIABLE)
-			solution << "F_" << v ;
+			solution << "F_" << v;
 		else if (_variables_type[v] == LinearSolver::UINT_VARIABLE)
-			solution << "UI_" << v ;
+			solution << "UI_" << v;
 		else if (_variables_type[v] == LinearSolver::BIN_VARIABLE)
 			solution << "B_" << v;
 		solution << "\t = " << _variables_value[v] << std::endl;
@@ -491,7 +492,7 @@ bool LinearSolver::run_solver() {
 	case 2: //CPLEX
 	{
 
-		std::string const cmd = cplex_binary_path + " -c \" read " + _in_file + " \" \"set threads 1 \" \" set timelimit " + std::to_string(_solver_time_out) +" \" \"opt \" \" set logfile " + _out_file + " \" \"display solution variables -\" \"quit\" > cplex.log ";
+		std::string const cmd = cplex_binary_path + " -c \" read " + _in_file + " \" \"set threads 1 \" \" set timelimit " + std::to_string(_solver_time_out) + " \" \"opt \" \" set logfile " + _out_file + " \" \"display solution variables -\" \"quit\" > cplex.log ";
 		TALK(cmd.c_str());
 		//removing previous result file
 		if (std::system(cmd.c_str()) != 0) {
@@ -505,7 +506,7 @@ bool LinearSolver::run_solver() {
 	}
 	case 3: //GPLK - GLPSOL
 	{
-		std::string const cmd = glpk_binary_path + " --tmlim " +std::to_string(_solver_time_out) +  "  --lp " + _in_file + " -o " + _out_file + " > glpk.log";
+		std::string const cmd = glpk_binary_path + " --tmlim " + std::to_string(_solver_time_out) + "  --lp " + _in_file + " -o " + _out_file + " > glpk.log";
 		TALK(cmd.c_str());
 		if (std::system(cmd.c_str()) != 0) {
 			TALK("Pb with glpsol");
@@ -552,28 +553,28 @@ bool LinearSolver::read_out_file() {
 	size_t compteur = 0;
 	while (solver_output >> a && compteur < nb_variables()) {
 		if (a.size() > 2)
-		if (string_start(a, "F_") || (a.size() > 3 && string_start(a, "UI_")) || string_start(a, "B_")) {
-			size_t id = 0;
-			if (string_start(a, "F_")) {
-				id = (size_t)stoi(std::string(a.begin() + 2, a.end()));
-				//assert(_variables_type[id] == FLOAT_VARIABLE);
+			if (string_start(a, "F_") || (a.size() > 3 && string_start(a, "UI_")) || string_start(a, "B_")) {
+				size_t id = 0;
+				if (string_start(a, "F_")) {
+					id = (size_t)stoi(std::string(a.begin() + 2, a.end()));
+					//assert(_variables_type[id] == FLOAT_VARIABLE);
+				}
+				else if (string_start(a, "B_")) {
+					id = (size_t)stoi(std::string(a.begin() + 2, a.end()));
+					//assert(_variables_type[id] == BIN_VARIABLE);
+					if (_runned_solver == 3) solver_output >> a; //necessary ?
+				}
+				else if (string_start(a, "UI_")) {
+					id = (size_t)stoi(std::string(a.begin() + 3, a.end()));
+					//assert(_variables_type[id] == UINT_VARIABLE);
+					if (_runned_solver == 3) solver_output >> a;
+				}
+				while (compteur < id) {
+					_variables_value[(compteur++)] = 0;
+				}
+				double tmp; solver_output >> tmp;
+				_variables_value[(compteur++)] = tmp;//= index_t(stoi(a));
 			}
-			else if (string_start(a, "B_")) {
-				id = (size_t)stoi(std::string(a.begin() + 2, a.end()));
-				//assert(_variables_type[id] == BIN_VARIABLE);
-				if (_runned_solver == 3) solver_output >> a; //necessary ?
-			}
-			else if (string_start(a, "UI_")) {
-				id = (size_t)stoi(std::string(a.begin() + 3, a.end()));
-				//assert(_variables_type[id] == UINT_VARIABLE);
-				if (_runned_solver == 3) solver_output >> a;
-			}
-			while (compteur < id) {
-				_variables_value[(compteur++)] = 0;
-			}
-			double tmp; solver_output >> tmp;
-			_variables_value[(compteur++)] = tmp;//= index_t(stoi(a));
-		}
 	}
 
 	solver_output.close();
