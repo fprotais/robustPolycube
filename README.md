@@ -8,6 +8,7 @@
 - Complete this README: detail every binary with inputs and outputs. 
 - Splitting potentially bad tets: something similar to [this](https://github.com/fprotais/preprocess_polycube), but more efficient
 - Finish incomplete functions
+- Improve handling graphite and LinearSolver 
 
 # Future works
 - Ovelaps in input polycuboid:
