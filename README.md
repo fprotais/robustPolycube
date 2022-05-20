@@ -34,6 +34,6 @@ make -j
 
 coming...
 ```sh
-./rb_fromscratch ../mesh/S3.mesh 1. hexmesh.mesh 
+./rb_fromscratch ../mesh/B0.mesh 1. hexmesh.mesh 
 ```
 For the supported mesh formats, see [ultimaille](https://github.com/ssloy/ultimaille). 
