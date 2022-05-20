@@ -89,46 +89,22 @@ inline vec3 baricentric_point(const std::array<vec3, 8>& points, std::array<int,
 
 
 inline std::array<int, 8> oriented_int_nodes(const Hexahedra& m, const PointAttribute<vec3>& Ui, int c) {
-	std::array<int, 3> max = { { 0,0,0 } };
-	std::array<int, 3> min = { { -1, -1, -1 } };
+	std::array<int, 3> max = { { std::numeric_limits<int>::min(), std::numeric_limits<int>::min(), std::numeric_limits<int>::min() } };
+	std::array<int, 3> min = { { std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), std::numeric_limits<int>::max() } };
 	std::array<int, 8> nodes;
 	FOR(dim, 3) FOR(cv, 8) {
-		if (Ui[m.vert(c, cv)][dim] > max[dim])
-			max[dim] = int(Ui[m.vert(c, cv)][dim]);
-		else if (Ui[m.vert(c, cv)][dim] < min[dim])
-			min[dim] = int(Ui[m.vert(c, cv)][dim]);
+		max[dim] = std::max(int(Ui[m.vert(c, cv)][dim]), max[dim]);
+		min[dim] = std::min(int(Ui[m.vert(c, cv)][dim]), min[dim]);
 	}
 
 	FOR(cv, 8) {
-		const vec3 node = Ui[m.vert(c, cv)];
-		if (int(node.z) == max[2]) {
-			if (int(node.y) == max[1]) {
-				if (int(node.x) == max[0])
-					nodes[7] = m.vert(c, cv);
-				else
-					nodes[6] = m.vert(c, cv);
-			}
-			else {
-				if (int(node.x) == max[0])
-					nodes[5] = m.vert(c, cv);
-				else
-					nodes[4] = m.vert(c, cv);
-			}
-		}
-		else {
-			if (int(node.y) == max[1]) {
-				if (int(node.x) == max[0])
-					nodes[3] = m.vert(c, cv);
-				else
-					nodes[2] = m.vert(c, cv);
-			}
-			else {
-				if (int(node.x) == max[0])
-					nodes[1] = m.vert(c, cv);
-				else
-					nodes[0] = m.vert(c, cv);
-			}
-		}
+		std::array<int, 3> node;
+		FOR(i, 3) node[i] = (int)std::round(Ui[m.vert(c, cv)][i]);
+		int id = 0;
+		if (node[0] == max[0]) id += 1;
+		if (node[1] == max[1]) id += 2;
+		if (node[2] == max[2]) id += 4;
+		nodes[id] = m.vert(c, cv);
 	}
 
 	return nodes;
@@ -145,7 +121,6 @@ static void split_to_unit_hexes(const Final_mesh& coarsehexmesh, Final_mesh& hex
 		std::array<int, 8> nodes = oriented_int_nodes(m, coarsehexmesh.polycube_coord, c);
 		FOR(cv, 8) m.vert(c, cv) = nodes[cv];
 	}
-
 	std::vector<std::array<int, 8>> hexes;
 	std::vector<int> original_cell;
 	std::vector<vec3> new_pts;
