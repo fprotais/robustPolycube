@@ -1,6 +1,6 @@
 # Robust Quantization for Polycube-Maps
 
-![](figure/rb_teaser.png)
+![](figures/rb_teaser.png)
 
 [François Protais](fprotais.github.op), [Maxence Reberol](https://mxncr.github.io/), Nicolas Ray, [Etienne Corman](https://members.loria.fr/ECorman/), Franck Ledoux and [Dmitry Sokolov](https://members.loria.fr/DSokolov/)
 
