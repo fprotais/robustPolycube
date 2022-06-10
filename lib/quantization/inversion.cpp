@@ -262,6 +262,14 @@ void inverse(const UM::Tetrahedra& m, const UM::Tetrahedra& polycuboid, const So
 	Trace::drop_cells_scalar(coarsehexmesh.m, coarsehexmesh.original_bloc, "coarsehexmesh");
 	Trace::drop_cellfacet_scalar(coarsehexmesh.m, coarsehexmesh.bnd_chart, "coarsehexmesh_charts", -1, true);
 	split_to_unit_hexes(coarsehexmesh, hexmesh);
+	{
+		FOR(v, hexmesh.m.nverts()) std::swap(hexmesh.polycube_coord[v], hexmesh.m.points[v]) ;
+		Trace::drop_cells_scalar(hexmesh.m, hexmesh.original_bloc, "polycubehexmesh");
+		Trace::drop_cellfacet_scalar(hexmesh.m, hexmesh.bnd_chart, "polycubehexmesh_charts", -1, true);
+		FOR(v, hexmesh.m.nverts()) std::swap(hexmesh.polycube_coord[v], hexmesh.m.points[v]) ;
+
+	}
+
 
 	smooth_in_polycuboid(charts, hexmesh);
 	change_points_from_polycuboid_to_mesh(m, polycuboid, *hexmesh.m.points.data);
