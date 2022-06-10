@@ -115,7 +115,7 @@ For the moment, the quantization is very sensible on invalid boundary flagging (
 ![](figures/color_pb.jpg)
 Note that it can happen with only 1 poorly flagged triangle, that will break our block extraction and give some strange result. I'll try to implement some cleaning procedure to reduce those problems. 
 2. Globally incoherent flagging
-![](figures/color_pb.jpg)
+![](figures/glob_incoherence.jpg)
 The green path on the image will need to be higher than itself, which makes the block extraction impossible. This is actually quite difficult to fix. They try to do it [here](https://hal.inria.fr/hal-01211408/document). 
 
 ## Non bijective mapping (overlaps)
