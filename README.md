@@ -16,7 +16,7 @@ I consider the polycube pipeline as 5 steps: we start from a domain $\Omega$, th
 
 1. `rb_generate_flagging` takes a domain and generates a basic flagging;
 2. `rb_generate_deformation` takes a domain and a flagging and generates a bijective polycuboid;
-3. Along with 5. is the main contribution of *Robust Quantization for Polycube-Maps*, we provide a single executable doing both:
+3. Along with 4. is the main contribution of *Robust Quantization for Polycube-Maps*, we provide a single executable doing both:
 4. `rb_generate_quantization` takes a domain, a flagging, and a polycuboid, with optionnaly a scaling and generate the corresponding hexmesh;
 5. `rb_perform_postprocessing` takes the a domain and an hexmesh, and perfoms a pillowing and some smoothing to generate a higher quality hexmesh.
 

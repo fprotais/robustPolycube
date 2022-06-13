@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     std::string meshextension = std::filesystem::path(inputname).extension().string();
 
     std::string resultname = meshname + "_smoothed" + meshextension;
-    if (argc > 3) resultname = argv[4];
+    if (argc > 3) resultname = argv[3];
 
 
     // LOADING
