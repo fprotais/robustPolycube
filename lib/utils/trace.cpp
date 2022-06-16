@@ -379,6 +379,8 @@ namespace Trace {
 			myfile << "scene_graph.current().shader.autorange()\n";
 			myfile << "scene_graph.current().shader.vertices_style = 'true; 0 0 0 1; 3'\n";
 		}
+		myfile << "scene_graph.current().shader.mesh_style = 'true; 0 0 0 1; 1'\n";
+
 		myfile.close();
 	}
 
