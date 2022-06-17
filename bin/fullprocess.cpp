@@ -12,6 +12,7 @@
 #include "quantization/blockExtraction.h"
 #include "quantization/quantization.h"
 #include "quantization/inversion.h"
+#include "quantization/chartCleaning.h"
 
 #include "post_processing/pillowing.h"
 #include "post_processing/CADaware_hexsmoothing.h"
@@ -161,7 +162,13 @@ int main(int argc, char** argv) {
     
     // QUANTIZATION
 
-    cleanflags(m, polycuboid, cfflags);
+    if (!cleanflags(m, polycuboid, cfflags)) {
+        Trace::alert("Flagging is locally invalid...");
+        Trace::alert("We are stopping here.");
+        Trace::drop_cellfacet_scalar(m, cfflags, "finalFlaggingWithTries", -1, true);
+        Trace::conclude();
+        return 1;
+    }
 
     Sorted_charts charts;
 

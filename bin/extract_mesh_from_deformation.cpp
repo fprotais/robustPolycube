@@ -11,6 +11,7 @@
 #include "quantization/blockExtraction.h"
 #include "quantization/quantization.h"
 #include "quantization/inversion.h"
+#include "quantization/chartCleaning.h"
 
 #ifndef DEBUG_GRAPHITE_PATH
 #define DEBUG_GRAPHITE_PATH "C:/fprotais/softwares/graphite/build/Windows/bin/Release/graphite.exe"
@@ -111,8 +112,24 @@ int main(int argc, char** argv) {
 
     // RUNNING
 
-    cleanflags(m, polycuboid, cfflag);
+    if (!polycuboid_is_valid(m, polycuboid, cfflag)) {
+        Trace::alert("The polycuboid has facet not plannar in the flagging??");
+        Trace::alert("We are stopping here.");
+        Trace::conclude();
+        return 1;
+    }
 
+    if (!cleanflags(m, polycuboid, cfflag)) {
+        Trace::alert("Flagging is locally invalid...");
+        Trace::alert("We are stopping here.");
+        Trace::drop_cellfacet_scalar(m, cfflag, "finalFlaggingWithTries", -1, true);
+        Trace::conclude();
+        return 1;
+    }
+    Trace::drop_cellfacet_scalar(m, cfflag, "corrected_flagging", -1, true);
+    //Trace::conclude();
+    //return 0;
+    
     Sorted_charts charts;
 
     compute_charts(m, polycuboid, cfflag, charts);

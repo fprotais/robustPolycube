@@ -374,7 +374,7 @@ namespace Trace {
 			myfile << "scene_graph.current().shader.autorange()\n";
 		}
 		else if (!point_attr.empty()) {
-			myfile << "scene_graph.current().shader.painting = 'ATTRIBUTE'\n";
+			myfile << " scene_graph.current().shader.painting = 'ATTRIBUTE'\n";
 			myfile << "scene_graph.current().shader.attribute = 'vertices." << point_attr << "'\n";
 			myfile << "scene_graph.current().shader.autorange()\n";
 			myfile << "scene_graph.current().shader.vertices_style = 'true; 0 0 0 1; 3'\n";

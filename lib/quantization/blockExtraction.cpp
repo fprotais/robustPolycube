@@ -7,48 +7,39 @@
 using namespace UM;
 using namespace rb_data_structure;
 
-void cleanflags(const UM::Tetrahedra& m, const UM::Tetrahedra& polycuboid, UM::CellFacetAttribute<int>& cfflag) {
-	Trace::alert("Pouet, function cleanflags need implementation.");
-}
 
 void compute_charts(const UM::Tetrahedra& m, const UM::Tetrahedra& polycuboid, const UM::CellFacetAttribute<int>& cfflag, rb_data_structure::Sorted_charts& charts) {
 	Triangles surf;
 	std::vector<int> surf2cf;
-	OppositeFacet vec(m);
 	std::vector<int> cf_is_bnd(m.ncells() * 4);
 
 	surf.points.data->assign(m.points.begin(), m.points.end());
-	FOR(cf, 4 * m.ncells()) if (vec.adjacent[cf] == -1) {
+	FOR(cf, 4 * m.ncells()) if (cfflag[cf] != -1) {
 		cf_is_bnd[cf] = true;
 		int f = surf.create_facets(1);
 		surf2cf.push_back(cf);
 		FOR(fv, 3) surf.vert(f, fv) = m.facet_vert(cf / 4, cf % 4, fv);
 	}
-	surf.delete_isolated_vertices();
-	
 
-	DisjointSet ds(4 * m.ncells());
-	SurfaceConnectivity fec(surf);
-	FOR(he, surf.ncorners()) {
-		int opp = fec.opposite(he);
-		if (opp == -1) continue;
-		int cf1 = surf2cf[fec.facet(he)];
-		int cf2 = surf2cf[fec.facet(opp)];
-		if (cfflag[cf1] == cfflag[cf2]) ds.merge(cf1, cf2);
+	DisjointSet ds(3 * m.nverts());
+	FOR(f, surf.nfacets()) FOR(fv, 3) {
+		int dim = (cfflag[surf2cf[f]] / 2);
+		ds.merge(dim * surf.nverts() + surf.vert(f, fv), dim * surf.nverts() + surf.vert(f, (fv + 1) % 3));
 	}
 
 	std::vector<int> ids;
 	int nb_ids = ds.get_sets_id(ids);
 	std::vector<int> bnd_id(nb_ids, -1);
 
-
 	FOR(cf, 4 * m.ncells()) if (cf_is_bnd[cf]) {
-		int id = ids[cf];
+		int dim = (cfflag[cf] / 2);
+		int rep_v = m.facet_vert(cf/4, cf%4, 0);
+		int id = ids[dim * m.nverts() + rep_v];
 		if (bnd_id[id] == -1) {
 			bnd_id[id] = charts.size();
 			charts.charts.push_back(Chart());
-			charts.charts.back().dim = cfflag[cf] / 2;
-			charts.charts.back().value = polycuboid.points[m.facet_vert(cf / 4, cf % 4, 0)][cfflag[cf] / 2];
+			charts.charts.back().dim = dim;
+			charts.charts.back().value = polycuboid.points[rep_v][dim];
 			charts.charts.back().tetFacets.push_back(cf);
 		}
 		else {
