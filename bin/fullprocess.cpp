@@ -169,6 +169,7 @@ int main(int argc, char** argv) {
         Trace::conclude();
         return 1;
     }
+    Trace::drop_cellfacet_scalar(m, cfflags, "corrected_flagging", -1, true);
 
     Sorted_charts charts;
 
