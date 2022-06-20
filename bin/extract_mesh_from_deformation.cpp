@@ -127,9 +127,8 @@ int main(int argc, char** argv) {
         return 1;
     }
     Trace::drop_cellfacet_scalar(m, cfflag, "corrected_flagging", -1, true);
-    //Trace::conclude();
-    //return 0;
-    
+
+
     Sorted_charts charts;
 
     compute_charts(m, polycuboid, cfflag, charts);

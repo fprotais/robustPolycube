@@ -13,10 +13,14 @@ bool polycuboid_is_valid(const UM::Tetrahedra & m, const UM::Tetrahedra & polycu
 	bool one_is_bad = false;
 	CellFacetAttribute<bool> isbad(m, false);
 	FOR(cf, m.ncells() * 4) if (cfflag[cf] != -1) {
-		vec3 n = polycuboid.util.facet_normal(cf / 4, cf % 4);
-		if (n * flag2normal[cfflag[cf]] > 1e-8) {
-			one_is_bad = true;
+		int dim = cfflag[cf] / 2;
+		int c = cf / 4;
+		int lf = cf % 4;
+		double x = polycuboid.points[m.facet_vert(c, lf, 0)][dim];
+		FOR(i, 2) if (std::abs(x - polycuboid.points[m.facet_vert(c, lf, i+1)][dim]) > 1e-8) {
 			isbad[cf] = true;
+			one_is_bad = true;
+			break;
 		}
 	}
 	if (one_is_bad) {
@@ -132,6 +136,15 @@ bool cleanflags(const UM::Tetrahedra& volume, const UM::Tetrahedra& polycuboid, 
 	int MAX_ITER_CORRECTION = 500;
 	int iter = 0;
 
+	bool DEFORMATION_LOOKS_BROKEN = false;
+
+	double AVG_EDGE_SIZE = 0;
+	FOR(f, m.nfacets()) FOR(fc, 3) {
+		AVG_EDGE_SIZE += (U[m.vert(f, fc)] - U[m.vert(f, (fc + 1) % 3)]).norm();
+	}
+	AVG_EDGE_SIZE /= m.nfacets() * 3;
+	
+
 	while (!flagging_is_locally_valid && iter++ < MAX_ITER_CORRECTION) {
 		Sorted_charts charts;
 		compute_charts(m, flag, U, charts);
@@ -183,24 +196,94 @@ bool cleanflags(const UM::Tetrahedra& volume, const UM::Tetrahedra& polycuboid, 
 				break;
  			}
 
-			/*struct Polycube_edge {
+			struct Polycube_edge {
 				int c1;
 				int c2;
 				int dir;
 				int opp_chart;
+				int opp_dir;
+				int opp_dim;
 			};
-			std::vector<Polycube_edge> pedges;*/
-			std::array<double, 3> gains = { 0,0,0 };
-
+			std::vector<Polycube_edge> pedges;
 			
+			auto _3rd_chart = [](int chart1, int chart2) -> int {
+				int d1 = chart1 / 2;
+				int d2 = chart2 / 2;
+				int s1 = chart1 % 2;
+				int s2 = chart2 % 2;
+				if (((d1 + 1) % 3) == d2) {
+					int d3 = (d1 + 2) % 3;
+					int s3 = (s1 + s2) % 2;
+					return 2 * d3 + s3;
+				}
+				if (((d1 + 2) % 3) == d2) {
+					int d3 = (d1 + 1) % 3;
+					int s3 = (s1 + s2 + 1) % 2;
+					return 2 * d3 + s3;
+				}
+				return -1;
+			};
+
+			for (int he : circular_he) if (iscorner[fec.from(he)]) {
+				if (!pedges.empty()){
+					pedges.back().c2 = fec.from(he);
+				}
+				Polycube_edge pedge;
+				pedge.c1 = fec.from(he);
+				pedge.c2 = -1;
+				int opp = fec.opposite(he);
+				pedge.opp_chart = charts.cf2chart[fec.facet(opp)];
+				pedge.dir = _3rd_chart(flag[fec.facet(he)], flag[fec.facet(opp)]);
+				pedge.opp_dim = flag[fec.facet(opp)] / 2;
+				pedge.opp_dir = flag[fec.facet(opp)] % 2;
+				pedges.push_back(pedge);
+			}
+			pedges.back().c2 = fec.from(circular_he[0]);
+			
+
+			std::array<double, 3> gains = { 0,0,0 };
+			std::array<int, 3> neigh_dir = { -2,-2,-2 };
+
+			for (Polycube_edge pedge : pedges) {
+				if (neigh_dir[pedge.opp_dim] == -2) neigh_dir[pedge.opp_dim] = pedge.opp_dir;
+				else if (neigh_dir[pedge.opp_dim] != pedge.opp_dir) neigh_dir[pedge.opp_dim] = -1;
+				
+				FOR(d, 3) gains[d] += std::abs(U[pedge.c2][d] - U[pedge.c1][d]);
+			}
+			int curr_dim = charts[actual_chart].dim;
+
+			FOR(d, 3) if (d != curr_dim) if (gains[d] <= AVG_EDGE_SIZE * 1e-6) {
+				int new_dir = neigh_dir[d];
+				if (new_dir == -2) {
+					Trace::alert("What? trying to continue.");
+				}
+				else if (new_dir == -1) {
+					Trace::alert("The deformation and flagging looks bad. Fixing will introduce invalid flaggings.");
+					std::vector<int> badfacets = connexe_chart_componant(m, fec, charts, circular_he[0]);
+
+					FacetAttribute<int> here(m, -1);
+					for (int f : badfacets) here[f] = 0;
+					Trace::drop_facet_scalar(m, here, "problematic_chart_", -1);
+					flagging_is_locally_valid = false;
+					DEFORMATION_LOOKS_BROKEN = true;
+					break;
+				}
+				else {
+					Trace::alert("A chart is flat in a wrong dimension. Proceeding to some merging to fix that.");
+					std::vector<int> badfacets = connexe_chart_componant(m, fec, charts, circular_he[0]);
+					for (int f : badfacets) flag[f] = 2 * d + new_dir;
+					flagging_is_locally_valid = false;
+					break;
+				}
+			}
+			if (!flagging_is_locally_valid) break;
 
 		}
 
-
+		if (DEFORMATION_LOOKS_BROKEN) break;
 	}
 	FOR(f, m.nfacets()) cfflag[surf2cf[f]] = flag[f];
 
-	// redo
 	if (!flagging_is_locally_valid) {
 		return false;
 	}
