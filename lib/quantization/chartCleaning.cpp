@@ -152,7 +152,6 @@ bool cleanflags(const UM::Tetrahedra& volume, const UM::Tetrahedra& polycuboid, 
 
 		PointAttribute<bool> iscorner(m);
 		mark_corners(m, charts, iscorner);
-		//Trace::drop_selected_pointset(m.points, iscorner, "corners");
 
 		std::vector<bool> mark(m.nfacets() * 3, true);
 		SurfaceConnectivity fec(m);
