@@ -36,6 +36,15 @@ cmake -DCMAKE_BUILD_TYPE=Release .. &&
 make -j 
 ```
 
+# Debug and graphite
+
+You may run into the following error: 
+```sh: 1: C:/fprotais/softwares/graphite/build/Windows/bin/Release/graphite.exe: not found```
+This is not an hard fail, the code actually succeeded! But you can enable the debug information with graphite. First install [Graphite](https://github.com/BrunoLevy/GraphiteThree) and then set-it up through cmake: 
+```sh
+cmake -DCMAKE_BUILD_TYPE=Release -DDEBUG_GRAPHITE_PATH=graphite ..
+```
+With `graphite` being a working way to call GraphiteThree through sh or CMD on windows. Running an executable will automatically open graphite with all of the saved debug scenes. This can be useful to troubleshoot problems. 
 
 # Binaries
 We split our code into several binaries to help testing specific method. We use the Medit format (.mesh) as an example. For the supported IO mesh formats, see [ultimaille](https://github.com/ssloy/ultimaille). 
