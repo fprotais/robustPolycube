@@ -91,7 +91,7 @@ The code takes a volume with an hexmesh and add a pillowing layer to the hexmesh
 ## `rb_fromscratch` 
 The code takes a volume or surface and perfom the whole pipeline. The corresponding code is in `bin/fullprocess.cpp`.
 ```sh
-./rb_generate_quantization B0.mesh 1. B0_hexmesh.mesh
+./rb_fromscratch B0.mesh 1. B0_hexmesh.mesh
 ```
 The "1." is the element sizing. To test flagging in an easy way, you can add `B0.flag` as a 4th argument. 
 
