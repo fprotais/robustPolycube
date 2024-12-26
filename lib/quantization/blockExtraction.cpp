@@ -76,7 +76,7 @@ inline bool check_mesh_is_connexe(Hexahedra& m) {
 }
 
 inline bool check_bnd_mesh_is_variety(Hexahedra& m) {
-	Trace::alert("Pouet, function check_bnd_mesh_is_variety need implementation.");
+	Trace::warning("Pouet, function check_bnd_mesh_is_variety need implementation.");
 	return true;
 }
 

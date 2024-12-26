@@ -4,15 +4,11 @@
 #include <deformation/tools.h>
 #include <deformation/deformation.h>
 
-#ifndef DEBUG_GRAPHITE_PATH
-#define DEBUG_GRAPHITE_PATH "C:/fprotais/softwares/graphite/build/Windows/bin/Release/graphite.exe"
-#endif 
-
 using namespace UM;
 #define FOR(i, n) for(int i = 0; i < n; i++)
 
 int main(int argc, char** argv) {
-    Trace::initialize(DEBUG_GRAPHITE_PATH);
+    Trace::initialize();
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " mesh.ext flaggingfile remeshed.ext remeshedflagging polycuboid.ext" << std::endl;
         std::cerr << "Input:" << std::endl;

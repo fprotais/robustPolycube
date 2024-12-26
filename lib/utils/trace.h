@@ -25,7 +25,7 @@ namespace Trace {
 	//   (_)_ _ (_) |_(_)__ _| (_)_____ _| |_(_)___ _ __ 
 	//   | | ' \| |  _| / _` | | |_ / _` |  _| / _ \ '  | 
 	//   |_|_||_|_|\__|_\__,_|_|_/__\__,_|\__|_\___/_||_|
-	void initialize(const std::string& graphite_path);
+	void initialize();
 	void conclude();
 
 	//    _                _               _   ___ ___ 
@@ -48,6 +48,7 @@ namespace Trace {
 	};
 	void step(std::string stepname, int alert_level = 0);
 	void alert(std::string msg);
+	void warning(std::string msg);
 
 	void log_value(std::string const& str, double val, int alert_level = 0);
 	void log_string(std::string const& str, std::string const& val, int alert_level = 0);

@@ -13,4 +13,13 @@ void remove_outerbox(UM::Tetrahedra& model, UM::CellFacetAttribute<int>& flags, 
 
 double avg_edge_size(const UM::Triangles& m);
 
-void center_and_normalise_mesh(UM::Triangles& m);
+std::tuple<double, UM::vec3> center_and_normalise_mesh(UM::Triangles& m);
+
+
+template<typename T>
+void scale_back(T& m, double scale, UM::vec3 shift) {
+	for (UM::vec3 &pt : m.points) {
+        pt = scale * pt + shift;
+    } 
+
+}

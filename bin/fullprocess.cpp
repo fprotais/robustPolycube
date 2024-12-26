@@ -17,10 +17,6 @@
 #include "post_processing/pillowing.h"
 #include "post_processing/CADaware_hexsmoothing.h"
 
-#ifndef DEBUG_GRAPHITE_PATH
-#define DEBUG_GRAPHITE_PATH "C:/fprotais/softwares/graphite/build/Windows/bin/Release/graphite.exe"
-#endif 
-
 #ifndef MILP_SOLVER_CPLEX
 #define MILP_SOLVER_CPLEX "cplex"
 #endif 
@@ -39,7 +35,7 @@ using namespace rb_data_structure;
 #define FOR(i, n) for(int i = 0; i < n; i++)
 
 int main(int argc, char** argv) {
-    Trace::initialize(DEBUG_GRAPHITE_PATH);
+    Trace::initialize();
     bool has_solver = INITIALISE_LINEARSOLVER(MILP_SOLVER_LPSOLVE, MILP_SOLVER_CPLEX, MILP_SOLVER_GLPK, MILP_SOLVER_GUROBI_CL);
     if (has_solver) std::cerr << "Executable is linked with a MILP solver." << std::endl;
     else std::cerr << "No MILP solver found, will run default algorithm..." << std::endl;
@@ -138,7 +134,7 @@ int main(int argc, char** argv) {
 
     //  DEFORMATION
 
-    center_and_normalise_mesh(surf);
+    auto [scale, shift] = center_and_normalise_mesh(surf);
     Trace::drop_facet_scalar(surf, flag, "flagging");
 
     Tetrahedra m;
@@ -190,14 +186,14 @@ int main(int argc, char** argv) {
     Trace::drop_cells_scalar(hexmesh.m, hexmesh.original_bloc, "hexmesh");
     Trace::drop_cellfacet_scalar(hexmesh.m, hexmesh.bnd_chart, "hexmesh_charts", -1, true);
 
-    // POST PRoCESSING
-
+    // POST PROCESSING
     add_a_pillow(hexmesh.m, hexmesh.original_bloc);
     Trace::drop_cells_scalar(hexmesh.m, hexmesh.original_bloc, "pillowed", -2);
 
     smooth(hexmesh.m, surf, 1);
     Trace::drop_cells_scalar(hexmesh.m, hexmesh.original_bloc, "smoothed", -2);
 
+    scale_back(hexmesh.m, scale, shift);
 
     // SAVING
     write_by_extension(hexmeshname, hexmesh.m, { {},{},{},{} });

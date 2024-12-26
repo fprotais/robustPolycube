@@ -3,6 +3,7 @@
 #include <fstream>
 #include <map>
 
+
 #define FOR(i, n) for(int i = 0; i < n; i++)
 using namespace UM;
 
@@ -303,10 +304,23 @@ namespace Trace {
 		trace_steps_active = save_val;
 	}
 
-	void initialize(const std::string& graphite_path_in) {
+	void initialize() {
 		outputdir = "";
 		outputprefix = "debug_";
-		if (graphite_path == "") {
+		std::string graphite_path_in;
+#ifdef DEBUG_GRAPHITE_PATH
+		graphite_path_in = DEBUG_GRAPHITE_PATH;
+#else 
+		graphite_path_in = "graphite";
+#endif 
+		if(std::system(std::string(graphite_path_in + " -h > tmp.file").c_str())) {
+			Trace::warning("Failed to run graphite command through: " + graphite_path_in );
+			std::cout << "This is only for debug purposes, code will continue correctly." << std::endl;
+			graphite_path_in = "";
+		}
+		std::remove("tmp.file");
+
+		if (graphite_path_in != "") {
 			std::remove("view.lua");
 			drop_mesh_is_active = true;
 			trace_steps_active = true;
@@ -316,7 +330,13 @@ namespace Trace {
 	void conclude() {
 		if (drop_mesh_is_active) {
 			std::string cmd = graphite_path + " " + outputdir + "view.lua";
-			system(cmd.c_str());
+			if(std::system(cmd.c_str())) {
+				Trace::warning("Failed to run graphite command through: " + graphite_path );
+				std::cout << "This is only for debug purposes, code will continue / terminate correctly." << std::endl;
+			}
+		}
+		else {
+			Trace::warning("Debugging outputs with GraphiteThree not enabled. See README.md. ");
 		}
 	}
 
@@ -343,6 +363,7 @@ namespace Trace {
 
 	void log_value(std::string const& str, double val, int alert_level) { set_alert_level(alert_level); LogTime::log_value(str, val); color(15, 0); }
 	void log_string(std::string const& str, std::string const& val, int alert_level) { set_alert_level(alert_level); LogTime::log_string(str, val); color(15, 0); }
+	void warning(std::string msg) { log_string("WARNING", msg, 1); }
 	void alert(std::string msg) { log_string("ALERT", msg, 2); }
 	void show_log() {
 		LogTime::report(std::cerr);

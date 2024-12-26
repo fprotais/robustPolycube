@@ -275,10 +275,12 @@ double avg_edge_size(const Triangles& m) {
 	return size;
 }
 
-void center_and_normalise_mesh(Triangles& m) {
+std::tuple<double, UM::vec3>  center_and_normalise_mesh(Triangles& m) {
 	double scale = avg_edge_size(m);
 	vec3 center;
 	FOR(v, m.nverts()) center += m.points[v];
 	center /= m.nverts();
 	FOR(v, m.nverts()) m.points[v] = (m.points[v] - center) / scale;
+	return {scale, center};
 }
+

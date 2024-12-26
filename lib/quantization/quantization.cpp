@@ -168,7 +168,7 @@ void quantize(const rb_data_structure::Sorted_charts & charts, rb_data_structure
 	MILPless_quantize(charts, blocks, scale);
 
 	if (!LinearSolver_is_runnable) {
-		Trace::alert("no available MILP solver. Only MILPless_quantize was run.");
+		Trace::warning("no available MILP solver. Only MILPless_quantize was run. See README.md on how to set-up MILP solvers (If I had time to fill it, or just contact author).");
 		return;
 	}
 
@@ -242,8 +242,6 @@ void MILPless_quantize(const rb_data_structure::Sorted_charts& charts, rb_data_s
 	bool is_valid = false;
 	int nb_of_iter = 0;
 	while (!is_valid && nb_of_iter++ < 100) {
-		std::cerr << ".";
-
 		std::array<int, 6> new_constraint;
 		if (!allow_overlaps)
 			is_valid = check_path_constraint_in_R(charts, blocks, chart_values, new_constraint);
@@ -268,10 +266,8 @@ void MILPless_quantize(const rb_data_structure::Sorted_charts& charts, rb_data_s
 		for (int c_ = new_constraint[2 * max_d]; c_ < charts.start_of_dim[max_d] + charts.nb_charts(max_d); c_++) chart_values[c_]++;
 	}
 	if (nb_of_iter >= 100) {
-		std::cerr << "!";
 		FOR(c, charts.size()) chart_values[c] = init_chart_values[c] + charts.dim_rank(c);
 	}
-	std::cerr << "good." << std::endl;
 	FOR(c, blocks.m.ncells()) FOR(cf, 6) {
 		int ch = blocks.issuing_chart_id[6 * c + cf];
 		int dim = charts[ch].dim;

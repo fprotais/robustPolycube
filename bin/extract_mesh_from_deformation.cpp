@@ -13,10 +13,6 @@
 #include "quantization/inversion.h"
 #include "quantization/chartCleaning.h"
 
-#ifndef DEBUG_GRAPHITE_PATH
-#define DEBUG_GRAPHITE_PATH "C:/fprotais/softwares/graphite/build/Windows/bin/Release/graphite.exe"
-#endif 
-
 #ifndef MILP_SOLVER_CPLEX
 #define MILP_SOLVER_CPLEX "cplex"
 #endif 
@@ -35,7 +31,7 @@ using namespace rb_data_structure;
 #define FOR(i, n) for(int i = 0; i < n; i++)
 
 int main(int argc, char** argv) {
-    Trace::initialize(DEBUG_GRAPHITE_PATH);
+    Trace::initialize();
     bool has_solver = INITIALISE_LINEARSOLVER(MILP_SOLVER_LPSOLVE, MILP_SOLVER_CPLEX, MILP_SOLVER_GLPK, MILP_SOLVER_GUROBI_CL);
     if (has_solver) std::cerr << "Executable is linked with a MILP solver." << std::endl;
     else std::cerr << "No MILP solver found, will run default algorithm..." << std::endl;

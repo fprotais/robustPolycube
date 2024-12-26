@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <iostream>
+#include "algorithm"
 
 #define FOR(i, n) for(int i = 0; i < n; i++)
 

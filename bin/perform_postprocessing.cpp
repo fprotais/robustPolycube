@@ -6,10 +6,6 @@
 #include "post_processing/CADaware_hexsmoothing.h"
 
 
-#ifndef DEBUG_GRAPHITE_PATH
-#define DEBUG_GRAPHITE_PATH "C:/fprotais/softwares/graphite/build/Windows/bin/Release/graphite.exe"
-#endif 
-
 #ifndef MILP_SOLVER_CPLEX
 #define MILP_SOLVER_CPLEX "cplex"
 #endif 
@@ -27,7 +23,7 @@ using namespace UM;
 #define FOR(i, n) for(int i = 0; i < n; i++)
 
 int main(int argc, char** argv) {
-    Trace::initialize(DEBUG_GRAPHITE_PATH);
+    Trace::initialize();
 
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " mesh.ext hexmesh.ext result.ext" << std::endl;
